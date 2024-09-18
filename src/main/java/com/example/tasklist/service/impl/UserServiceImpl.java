@@ -26,26 +26,32 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "UserService::getById", key = "#id")
-    public User getById(Long userId) {
+    public User getById(final Long userId) {
         return userRepository.findById(userId).orElseThrow(
-                () -> new ResourceNotFoundException("Can't find user by userId: " + userId));
+                () -> new ResourceNotFoundException(
+                        "Can't find user by userId: " + userId)
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "UserService::getUserByEmail", key = "#email")
-    public User getUserByEmail(String email) {
+    public User getUserByEmail(final String email) {
         return userRepository.findUserByEmail(email).orElseThrow(
-                () -> new ResourceNotFoundException("Can't find User by userName: " + email));
+                () -> new ResourceNotFoundException(
+                        "Can't find User by userName: " + email)
+        );
     }
 
     @Override
     @Transactional
     @Caching(put = {
-            @CachePut(value = "UserService::getById", key = "#user.id"),
-            @CachePut(value = "UserService::getUserByEmail", key = "#user.email")
+            @CachePut(value = "UserService::getById",
+                    key = "#user.id"),
+            @CachePut(value = "UserService::getUserByEmail",
+                    key = "#user.email")
     })
-    public User update(User user) {
+    public User update(final User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         return user;
@@ -54,15 +60,20 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     @Caching(cacheable = {
-            @Cacheable(value = "UserService::getById", key = "#user.id"),
-            @Cacheable(value = "UserService::getUserByEmail", key = "#user.email")
+            @Cacheable(value = "UserService::getById",
+                    key = "#user.id"),
+            @Cacheable(value = "UserService::getUserByEmail",
+                    key = "#user.email")
     })
-    public User create(User user) {
+    public User create(final User user) {
         if (userRepository.findUserByEmail(user.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("User by this email: " + user.getEmail() + "is already exists.");
+            throw new IllegalArgumentException("User by this email: "
+                    + user.getEmail() + "is already exists.");
         }
         if (!user.getPassword().equals(user.getPasswordConfirmation())) {
-            throw new IllegalArgumentException("Password and password confirmation don't match.");
+            throw new IllegalArgumentException(
+                    "Password and password confirmation don't match."
+            );
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         Set<Role> roles = Set.of(Role.ROLE_USER);
@@ -73,15 +84,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = "UserService::isTaskOwner", key = "#userId + '.' + #taskId")
-    public boolean isTaskOwner(Long userId, Long taskId) {
+    @Cacheable(value = "UserService::isTaskOwner",
+            key = "#userId + '.' + #taskId")
+    public boolean isTaskOwner(final Long userId, final Long taskId) {
         return userRepository.isTaskOwner(userId, taskId);
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "UserService::getById", key = "#id")
-    public void delete(Long userId) {
+    public void delete(final Long userId) {
         userRepository.deleteById(userId);
     }
 }

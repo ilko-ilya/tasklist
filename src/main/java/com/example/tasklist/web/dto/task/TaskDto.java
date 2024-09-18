@@ -19,7 +19,8 @@ public class TaskDto {
     @NotNull(message = "Id must be not NULL.", groups = OnUpdate.class)
     private Long id;
 
-    @NotNull(message = "The title must be not NULL.", groups = {OnUpdate.class, OnCreate.class})
+    @NotNull(message = "The title must be not NULL.", groups = {OnUpdate.class,
+            OnCreate.class})
     @Length(max = 255,
             message = "The title length must be smaller then 255 symbols.",
             groups = {OnUpdate.class, OnCreate.class}

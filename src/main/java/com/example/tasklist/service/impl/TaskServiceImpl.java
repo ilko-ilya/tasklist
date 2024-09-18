@@ -29,21 +29,21 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "TaskService::getById", key = "#id")
-    public Task getById(Long taskId) {
+    public Task getById(final Long taskId) {
         return taskRepository.findById(taskId).orElseThrow(
                 () -> new ResourceNotFoundException("Task not found."));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Task> getAllByUserId(Long userId) {
+    public List<Task> getAllByUserId(final Long userId) {
         return taskRepository.findAllByUserId(userId);
     }
 
     @Override
     @Transactional
     @CachePut(value = "TaskService::update", key = "#task.id")
-    public Task update(Task task) {
+    public Task update(final Task task) {
         if (task.getStatus() == null) {
             task.setStatus(Status.TODO);
         }
@@ -54,7 +54,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     @Cacheable(value = "TaskService::getById", key = "#task.id")
-    public Task create(Task task, Long userId) {
+    public Task create(final Task task, final Long userId) {
         User user = userService.getById(userId);
         task.setStatus(Status.TODO);
         user.getTasks().add(task);
@@ -65,14 +65,14 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     @CacheEvict(value = "TaskService::getById", key = "#id")
-    public void delete(Long taskId) {
+    public void delete(final Long taskId) {
         taskRepository.deleteById(taskId);
     }
 
     @Transactional
     @Override
     @CacheEvict(value = "TaskService::getById", key = "#id")
-    public void uploadImage(Long id, TaskImage taskImage) {
+    public void uploadImage(final Long id, final TaskImage taskImage) {
         Task task = getById(id);
         String fileName = imageService.upload(taskImage);
         task.getImages().add(fileName);

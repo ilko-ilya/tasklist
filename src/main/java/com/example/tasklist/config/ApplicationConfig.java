@@ -30,8 +30,9 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration
 @EnableWebSecurity
 public class ApplicationConfig {
-    public ApplicationConfig(@Lazy JwtTokenProvider jwtTokenProvider,
-                             ApplicationContext applicationContext, MinioProperties minioProperties) {
+    public ApplicationConfig(final @Lazy JwtTokenProvider jwtTokenProvider,
+                             final ApplicationContext applicationContext,
+                             final MinioProperties minioProperties) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.applicationContext = applicationContext;
         this.minioProperties = minioProperties;
@@ -47,7 +48,9 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+    public AuthenticationManager authenticationManager(
+            final AuthenticationConfiguration configuration
+    ) throws Exception {
         return configuration.getAuthenticationManager();
     }
 
@@ -55,17 +58,22 @@ public class ApplicationConfig {
     public MinioClient minioClient() {
         return MinioClient.builder()
                 .endpoint(minioProperties.getUrl())
-                .credentials(minioProperties.getAccessKey(), minioProperties.getSecretKey())
+                .credentials(
+                        minioProperties.getAccessKey(),
+                        minioProperties.getSecretKey())
                 .build();
     }
 
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
-                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .addSecurityItem(new SecurityRequirement()
+                        .addList("bearerAuth"))
                 .components(
-                        new Components().addSecuritySchemes("bearerAuth",
-                                new SecurityScheme().type(SecurityScheme.Type.HTTP)
+                        new Components().addSecuritySchemes(
+                                "bearerAuth",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
                         )
@@ -79,22 +87,39 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+    public SecurityFilterChain filterChain(final HttpSecurity httpSecurity)
+            throws Exception {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(withDefaults())
                 .httpBasic(withDefaults())
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS)
+                )
                 .exceptionHandling(exceptions ->
                         exceptions
-                                .authenticationEntryPoint((request, response, authException) -> {
-                                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                                    response.getWriter().write("Unauthorized.");
+                                .authenticationEntryPoint((
+                                        request,
+                                        response,
+                                        authException
+                                ) -> {
+                                    response.setStatus(
+                                            HttpStatus.UNAUTHORIZED.value()
+                                    );
+                                    response.getWriter()
+                                            .write("Unauthorized.");
                                 })
-                                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                                    response.setStatus(HttpStatus.FORBIDDEN.value());
-                                    response.getWriter().write("Access Denied.");
+                                .accessDeniedHandler((
+                                        request,
+                                        response,
+                                        accessDeniedException
+                                ) -> {
+                                    response.setStatus(
+                                            HttpStatus.FORBIDDEN.value()
+                                    );
+                                    response.getWriter()
+                                            .write("Access Denied.");
                                 }))
                 .authorizeHttpRequests(authz ->
                         authz
@@ -102,7 +127,10 @@ public class ApplicationConfig {
                                 .requestMatchers("/swagger-ui/**").permitAll()
                                 .requestMatchers("/v3/api-docs/**").permitAll()
                                 .anyRequest().authenticated())
-                .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+                        new JwtTokenFilter(jwtTokenProvider),
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return httpSecurity.build();
     }

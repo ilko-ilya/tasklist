@@ -33,7 +33,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class JwtTokenProvider {
-    private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(JwtTokenProvider.class);
 
     private final JwtProperties jwtProperties;
     private final UserDetailsService userDetailsService;
@@ -46,7 +47,12 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
     }
 
-    public String createAccessToken(Long userId, String name, String email, Set<Role> roles) {
+    public String createAccessToken(
+            final Long userId,
+            final String name,
+            final String email,
+            final Set<Role> roles
+    ) {
         Claims claims = Jwts.claims().setSubject(email);
         claims.put("id", userId);
         claims.put("name", name);
@@ -61,7 +67,10 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String createRefreshToken(Long userId, String email) {
+    public String createRefreshToken(
+            final Long userId,
+            final String email
+    ) {
         Claims claims = Jwts.claims().setSubject(email);
         claims.put("id", userId);
         Instant validity = Instant.now()
@@ -73,7 +82,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public JwtResponse refreshUserTokens(String refreshToken) {
+    public JwtResponse refreshUserTokens(final String refreshToken) {
         JwtResponse jwtResponse = new JwtResponse();
         if (!validateToken(refreshToken)) {
             throw new AccessDeniedException();
@@ -83,57 +92,70 @@ public class JwtTokenProvider {
         jwtResponse.setId(userId);
         jwtResponse.setName(user.getName());
         jwtResponse.setEmail(user.getEmail());
-        jwtResponse.setAccessToken(createAccessToken(userId, user.getName(), user.getEmail(), user.getRoles()));
-        jwtResponse.setRefreshToken(createRefreshToken(userId, user.getEmail()));
+        jwtResponse.setAccessToken(createAccessToken(
+                userId,
+                user.getName(),
+                user.getEmail(),
+                user.getRoles())
+        );
+        jwtResponse.setRefreshToken(createRefreshToken(
+                userId,
+                user.getEmail())
+        );
         return jwtResponse;
     }
 
-    private List<String> resolveRoles(Set<Role> roles) {
+    private List<String> resolveRoles(final Set<Role> roles) {
         return roles.stream()
                 .map(Enum::name)
                 .collect(Collectors.toList());
     }
 
-    public boolean validateToken(String token) {
+    public boolean validateToken(final String token) {
         try {
             Jws<Claims> claimsJwt = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token);
-            boolean isValid = !claimsJwt.getBody().getExpiration().before(new Date());
-            logger.debug("Token is valid: {}", isValid);
+            boolean isValid = !claimsJwt
+                    .getBody()
+                    .getExpiration()
+                    .before(new Date());
+            LOGGER.debug("Token is valid: {}", isValid);
             return isValid;
         } catch (JwtException | IllegalArgumentException e) {
-            logger.error("Expired or invalid JWT token", e);
+            LOGGER.error("Expired or invalid JWT token", e);
             return false;
         }
     }
 
-    private String getId(String token) {
+    private String getId(final String token) {
         try {
             Claims claims = getClaimsFromToken(token);
             String id = claims.get("id").toString();
-            logger.debug("Extracted ID from token: {}", id);
+            LOGGER.debug("Extracted ID from token: {}", id);
             return id;
         } catch (Exception e) {
-            logger.error("Failed to extract ID from token", e);
+            LOGGER.error("Failed to extract ID from token", e);
             throw new RuntimeException("Failed to extract ID from token", e);
         }
     }
 
-    private String getEmail(String token) {
+    private String getEmail(final String token) {
         try {
             Claims claims = getClaimsFromToken(token);
             String email = claims.getSubject();
-            logger.debug("Extracted username from token: {}", email);
+            LOGGER.debug("Extracted username from token: {}", email);
             return email;
         } catch (Exception e) {
-            logger.error("Failed to extract username from token", e);
-            throw new RuntimeException("Failed to extract username from token", e);
+            LOGGER.error("Failed to extract username from token", e);
+            throw new RuntimeException(
+                    "Failed to extract username from token", e
+            );
         }
     }
 
-    private Claims getClaimsFromToken(String token) {
+    private Claims getClaimsFromToken(final String token) {
         try {
             return Jwts.parserBuilder()
                     .setSigningKey(key)
@@ -141,28 +163,33 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token)
                     .getBody();
         } catch (Exception e) {
-            logger.error("Failed to parse token", e);
+            LOGGER.error("Failed to parse token", e);
             throw new RuntimeException("Failed to parse token", e);
         }
     }
 
-    public Authentication getAuthentication(String token) {
+    public Authentication getAuthentication(final String token) {
         try {
             String email = getEmail(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            UserDetails userDetails = userDetailsService
+                    .loadUserByUsername(email);
 
             if (userDetails == null) {
-                logger.warn("User not found: {}", email);
+                LOGGER.warn("User not found: {}", email);
                 throw new ResourceNotFoundException("User not found: " + email);
             }
 
-            logger.debug("Authenticated user: {}", email);
-            return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+            LOGGER.debug("Authenticated user: {}", email);
+            return new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    "",
+                    userDetails.getAuthorities()
+            );
         } catch (ResourceNotFoundException e) {
-            logger.error("Username not found: {}", e.getMessage());
+            LOGGER.error("Username not found: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            logger.error("Failed to authenticate token", e);
+            LOGGER.error("Failed to authenticate token", e);
             throw new RuntimeException("Failed to authenticate token", e);
         }
     }

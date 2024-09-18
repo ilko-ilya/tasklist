@@ -20,9 +20,10 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    public JwtResponse login(JwtRequest request) {
+    public JwtResponse login(final JwtRequest request) {
         JwtResponse jwtResponse = new JwtResponse();
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
                 request.getEmail(),
                 request.getPassword()));
 
@@ -36,12 +37,15 @@ public class AuthServiceImpl implements AuthService {
                 user.getEmail(),
                 user.getRoles())
         );
-        jwtResponse.setRefreshToken(jwtTokenProvider.createRefreshToken(user.getId(), user.getEmail()));
+        jwtResponse.setRefreshToken(jwtTokenProvider.createRefreshToken(
+                user.getId(),
+                user.getEmail())
+        );
         return jwtResponse;
     }
 
     @Override
-    public JwtResponse refresh(String refreshToken) {
+    public JwtResponse refresh(final String refreshToken) {
         return jwtTokenProvider.refreshUserTokens(refreshToken);
     }
 }
