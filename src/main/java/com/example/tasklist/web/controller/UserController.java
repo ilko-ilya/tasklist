@@ -34,7 +34,8 @@ import java.util.List;
 @Tag(name = "User Controller", description = "User API")
 public class UserController {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(UserController.class);
 
     private final UserService userService;
     private final TaskService taskService;
@@ -43,7 +44,8 @@ public class UserController {
 
     @PutMapping
     @Operation(summary = "You can UPDATE the user")
-    public UserDto update(@Validated(OnUpdate.class) @RequestBody UserDto userDto) {
+    public UserDto update(@Validated(OnUpdate.class)
+                              @RequestBody final UserDto userDto) {
         User user = userMapper.toEntity(userDto);
         User updatedUser = userService.update(user);
         return userMapper.toDto(updatedUser);
@@ -51,30 +53,32 @@ public class UserController {
 
     @GetMapping("/{id}")
     @Operation(summary = "You can get User by userID")
-    public UserDto getById(@PathVariable Long id) {
+    public UserDto getById(final @PathVariable Long id) {
         User user = userService.getById(id);
         return userMapper.toDto(user);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "You can delete User by userID")
-    public void delete(@PathVariable Long id) {
+    public void delete(final @PathVariable Long id) {
         userService.delete(id);
     }
 
     @GetMapping("/{id}/tasks")
     @Operation(summary = "You can get all the tasks by userID")
-    public List<TaskDto> getAllTasksByUserId(@PathVariable Long id) {
+    public List<TaskDto> getAllTasksByUserId(final @PathVariable Long id) {
         List<Task> allTasksByUserId = taskService.getAllByUserId(id);
         return taskMapper.toListDto(allTasksByUserId);
     }
 
     @PostMapping("/{id}/tasks")
     @Operation(summary = "You can add task to user")
-    public TaskDto createTask(@PathVariable Long id, @Validated(OnCreate.class)@RequestBody TaskDto taskDto) {
+    public TaskDto createTask(
+            final @PathVariable Long id,
+            @Validated(OnCreate.class)@RequestBody final TaskDto taskDto) {
         Task task = taskMapper.toEntity(taskDto);
         Task createdTask = taskService.create(task, id);
-        logger.error("Error while finding all tasks by userId");
+        LOGGER.error("Error while finding all tasks by userId");
         return taskMapper.toDto(createdTask);
     }
 }

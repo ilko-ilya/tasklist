@@ -28,19 +28,20 @@ public class AuthController {
     private final UserMapper userMapper;
 
     @PostMapping("/login")
-    public JwtResponse login(@Validated @RequestBody JwtRequest request) {
+    public JwtResponse login(final @Validated @RequestBody JwtRequest request) {
         return authService.login(request);
     }
 
     @PostMapping("/register")
-    public UserDto register(@Validated(OnCreate.class) @RequestBody UserDto userDto) {
+    public UserDto register(@Validated(OnCreate.class)
+                                final @RequestBody UserDto userDto) {
         User user = userMapper.toEntity(userDto);
         User createdUser = userService.create(user);
         return userMapper.toDto(createdUser);
     }
 
     @PostMapping("/refresh")
-    public JwtResponse refresh(@RequestBody String refreshToken) {
+    public JwtResponse refresh(final @RequestBody String refreshToken) {
         return authService.refresh(refreshToken);
     }
 }
