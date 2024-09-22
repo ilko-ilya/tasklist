@@ -80,11 +80,11 @@ class TaskServiceImplTest {
 
         assertTrue(testTasks.isEmpty(), "Список задач должен быть пустым");
 
-        when(taskRepository.findById(2L)).thenThrow(new ResourceNotFoundException("Task not found."));
+        when(taskRepository.findById(2L)).thenThrow(
+                new ResourceNotFoundException("Task not found."));
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            taskService.getById(2L);
-        });
+        assertThrows(ResourceNotFoundException.class,
+                () -> taskService.getById(2L));
 
         verify(taskRepository).findAllByUserId(invalidUserId);
     }
