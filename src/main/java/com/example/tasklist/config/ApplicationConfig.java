@@ -25,8 +25,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 @Configuration
 @EnableWebSecurity
 public class ApplicationConfig {
@@ -91,8 +89,8 @@ public class ApplicationConfig {
             throws Exception {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(withDefaults())
-                .httpBasic(withDefaults())
+                .cors(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS)
@@ -127,6 +125,7 @@ public class ApplicationConfig {
                                 .requestMatchers("/swagger-ui/**").permitAll()
                                 .requestMatchers("/v3/api-docs/**").permitAll()
                                 .anyRequest().authenticated())
+                .anonymous(AbstractHttpConfigurer::disable)
                 .addFilterBefore(
                         new JwtTokenFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class
